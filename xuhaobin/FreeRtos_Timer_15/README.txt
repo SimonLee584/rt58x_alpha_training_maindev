@@ -1,0 +1,14 @@
+第十五章 软件定时器
+
+软件定时器实验
+
+main()：创建一个任务Timercontrol_task，两个定时器AutoReloadTimer、OneShortTimer
+
+Timercontrol_task：获取键值来控制软件定时器的开关
+key0：开启定时器AutoReloadTimer
+key1：开启定时器OneShortTimer
+key2：关闭定时器AutoReloadTimer、OneShortTimer
+
+定时器AutoReloadTimer：周期定时器，开启后每秒触发一次回调函数，在回调函数中，翻转LED0电平，记录触发次数并通过串口打印
+
+定时器OneShortTimer：单次定时器，开启后2秒后触发一次回调函数后自动关闭，在回调函数中，翻转LED1电平，记录触发次数并通过串口打印
