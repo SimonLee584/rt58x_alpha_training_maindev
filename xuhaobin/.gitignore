@@ -1,0 +1,40 @@
+# Keil编译中间文件
+*.o
+*.obj
+*.d
+*.axf
+*.elf
+*.lst
+*.lnp
+*.crf
+*.build_log.htm
+*.dep
+*.i
+*.ii
+*.asm
+*.map
+*.bak
+*.tmp
+*.err
+*.rsp
+*.htm
+
+# 目录级产物
+Objects/
+Listings/
+__vm/
+UV4/
+uvprojx.bak
+uvproj.bak
+
+# 可执行/镜像文件
+*.exe
+*.bin
+*.hex
+
+# 系统/编辑器文件
+Thumbs.db
+.DS_Store
+.vscode/
+*.swp
+*.swo
