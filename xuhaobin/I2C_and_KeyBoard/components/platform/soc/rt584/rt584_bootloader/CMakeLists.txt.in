@@ -1,0 +1,4 @@
+sdk_add_static_library(rt584h_bootloader)
+sdk_set_linker_script(${CMAKE_CURRENT_LIST_DIR}/bootloader/ld/rt584.ld)
+sdk_add_include_directories(bootloader/src)
+add_definitions(-DCHIP_NAME="584" -DCONFIG_TARGET_BOARD="bootloader")

@@ -1,0 +1,119 @@
+/*
+ * Copyright (c) 2022-2025 Rafael Microelectronics Inc. All rights reserved.
+ * 
+ * SPDX-License-Identifier: LicenseRef-RafaelMicro-Proprietary-1.0
+ *
+ */
+
+/**
+ * \file            hosal_dpd.h
+ * \brief           Hosal deep power down header file
+ */
+/*
+ * Author:          Kc.tseng
+ */
+
+#ifndef HOSAL_DPD_H
+#define HOSAL_DPD_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
+#include "mcu.h"
+#include "dpd.h"
+
+
+
+/**
+ * \defgroup        HOSAL_DPD Hosal dpd
+ * \ingroup         RT584_HOSAL
+ * \brief           Define Hosal dpd definitions, structures, and functions
+ * @{
+ */
+
+/**
+ * \brief           Get reset all cause.
+ * \return          get cause register value
+ */
+__STATIC_INLINE uint32_t hosal_get_all_reset_cause(void) {
+    return get_all_reset_cause();
+}
+
+/**
+ * \brief           Reset by power on or not.
+ * \return          0: reset not by power on, 
+ *                  1: reset by power on
+ */
+__STATIC_INLINE uint32_t hosal_reset_by_power_on(void) {
+    return reset_by_power_on();
+}
+
+/**
+ * \brief           Reset by external reset or not.
+ * \return          0: reset not by external reset, 
+ *                  1: reset by external reset
+ */
+__STATIC_INLINE uint32_t hosal_reset_by_external(void) {
+    return reset_by_external();
+}
+
+/**
+ * \brief           Reset by deep power down or not.
+ * \return          0: reset not by deep power down, 
+ *                  1: reset by deep power down
+ */
+__STATIC_INLINE uint32_t hosal_reset_by_deep_power_down(void) {
+    return reset_by_deep_power_down();
+}
+
+/**
+ * \brief           Reset by deep sleep or not.
+ * \return          0: reset not by deep sleep, 
+ *                  1: reset by deep sleep
+ */
+__STATIC_INLINE uint32_t hosal_reset_by_deep_sleep(void) {
+    return reset_by_deep_sleep();
+}
+
+/**
+ * \brief           Reset by WDT or not.
+ * \return          0: reset not by WDT, 
+ *                  1: reset by WDT
+ */
+__STATIC_INLINE uint32_t hosal_reset_by_wdt(void) {
+    return reset_by_wdt();
+}
+
+/**
+ * \brief           Reset by software or not.
+ * \return          0: reset not by software, 
+ *                  1: reset by software
+ */
+__STATIC_INLINE uint32_t hosal_reset_by_software(void) {
+    return reset_by_software();
+}
+
+/**
+ * \brief           Reset by mcu lockup or not.
+ * \return          0: reset not by mcu lockup, 
+ *                  1: reset by mcu lockup
+ */
+__STATIC_INLINE uint32_t hosal_reset_by_lock(void) {
+    return reset_by_lock();
+}
+
+/**
+ * \brief           Clear reset cause.
+ */
+__STATIC_INLINE void hosal_clear_reset_cause(void) {
+    clear_reset_cause();
+}
+
+/*@}*/ /* end of RT584_HOSAL HOSAL_DPD */
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif /* End of HOSAL_DPD_H */
