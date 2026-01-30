@@ -52,11 +52,13 @@ extern "C" {
  */
 typedef enum
 {
-    APP_REQUEST_IDLE,                    /**< Application request event: idle.*/
-    APP_REQUEST_ADV_START,               /**< Application request event: advertising start.*/
-    APP_REQUEST_HIDS_PASSKEY_ENTRY,      /**< Application request event: passkey entry.*/
-    APP_REQUEST_HIDS_NUMERIC_COMP_ENTRY, /**< Application request event: numeric comparison entry.*/
-    APP_REQUEST_HIDS_NTF,                /**< Application request event: HID notification.*/
+    APP_REQUEST_IDLE,                          /**< Application request event: idle.*/
+    APP_REQUEST_ADV_START,                     /**< Application request event: advertising start.*/
+    APP_REQUEST_HIDS_PASSKEY_ENTRY,            /**< Application request event: passkey entry.*/
+    APP_REQUEST_HIDS_NUMERIC_COMP_ENTRY,       /**< Application request event: numeric comparison entry.*/
+    APP_REQUEST_HIDS_NTF,                      /**< Application request event: HID notification.*/
+    APP_REQUEST_HIDS_READ_RESPOND,       /**< Application request event: HID read respond.*/
+    APP_REQUEST_HIDS_LED_STATUS,    /**< Application request event: HID write respond.*/
 } app_request_t;
 
 /**

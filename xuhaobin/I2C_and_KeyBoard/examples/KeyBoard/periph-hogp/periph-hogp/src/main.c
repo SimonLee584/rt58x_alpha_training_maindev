@@ -89,13 +89,15 @@ static const ble_gap_addr_t  DEVICE_ADDR = {.addr_type = RANDOM_STATIC_ADDR,
 #define KEY_PIN_1                       1
 #define KEY_PIN_A                       2
 #define KEY_PIN_B                       3
-#define KEY_PIN_C                       4
+#define KEY_PIN_CAPSLOCK                4
+
+#define LED_PIN_CAPSLOCK                20
 
 #define KEYCODE_SHIFT                   0x02
 #define KEYCODE_1                       0x1E
 #define KEYCODE_A                       0x04
 #define KEYCODE_B                       0x05
-#define KEYCODE_C                       0x06
+#define KEYCODE_CAPSLOCK                0x39
 
 #define KEYBOARD_REPORT_SIZE            8
 
@@ -143,8 +145,7 @@ static void key_scan_report(uint8_t *p_data)
     if(hosal_gpio_pin_get(KEY_PIN_1,&pin_value) == 0 && pin_value == 0 && index < 8) p_data[index++] = KEYCODE_1;
     if(hosal_gpio_pin_get(KEY_PIN_A,&pin_value) == 0 && pin_value == 0 && index < 8) p_data[index++] = KEYCODE_A;
     if(hosal_gpio_pin_get(KEY_PIN_B,&pin_value) == 0 && pin_value == 0 && index < 8) p_data[index++] = KEYCODE_B;
-    if(hosal_gpio_pin_get(KEY_PIN_C,&pin_value) == 0 && pin_value == 0 && index < 8) p_data[index++] = KEYCODE_C;
-
+    if(hosal_gpio_pin_get(KEY_PIN_CAPSLOCK,&pin_value) == 0 && pin_value == 0 && index < 8) p_data[index++] = KEYCODE_CAPSLOCK;
 }
 
 static void app_gpio_key_handler(uint32_t pin, void *isr_param)
@@ -170,7 +171,26 @@ static void app_gpio_key_handler(uint32_t pin, void *isr_param)
  */
 static void ble_svcs_hids_evt_handler(ble_evt_att_param_t *p_param)
 {
-    printf("ble_svcs_hids_evt_handler = %x\n",p_param->event);
+    printf("ble_svcs_hids_evt_handler = %x\r\n",p_param->event);
+    if(p_param->event == BLESERVICE_HIDS_KEYBOARD_OUTPUT_REPORT_WRITE_WITHOUT_RSP_EVENT)
+    {
+        if(*(p_param->data) == 0x02)
+        {
+            hosal_gpio_pin_clear(LED_PIN_CAPSLOCK);
+        }
+        else if((*(p_param->data) & 0x02) == 0)
+        {
+            hosal_gpio_pin_set(LED_PIN_CAPSLOCK);
+        }
+    }
+    else if(p_param->event == BLESERVICE_HIDS_KEYBOARD_OUTPUT_REPORT_READ_EVENT || p_param->event == BLESERVICE_HIDS_BOOT_KEYBOARD_OUTPUT_REPORT_READ_EVENT)
+    {
+        ble_app_request_set(APP_HID_P_HOST_ID, APP_REQUEST_HIDS_READ_RESPOND, false);
+    }
+    else if(p_param->event == BLESERVICE_HIDS_KEYBOARD_INPUT_REPORT_READ_EVENT || p_param->event == BLESERVICE_HIDS_BOOT_KEYBOARD_INPUT_REPORT_READ_EVENT)
+    {
+        ble_app_request_set(APP_HID_P_HOST_ID, APP_REQUEST_HIDS_READ_RESPOND, false);
+    }
 }
 
 /**
@@ -245,6 +265,24 @@ static void app_peripheral_handler(app_req_param_t *p_param)
         gatt_param.p_data = p_profile_info->svcs_info_hids.server_info.data.keyboard_intput_report;
 
         status = ble_svcs_data_send(TYPE_BLE_GATT_NOTIFICATION, &gatt_param);
+        if(status != BLE_ERR_OK)
+        {
+            printf("ble_svcs_data_send fail!!!");
+        }
+    }
+    break;
+
+    case APP_REQUEST_HIDS_READ_RESPOND:
+    {
+        ble_gatt_data_param_t gatt_param;
+
+        key_scan_report(p_profile_info->svcs_info_hids.server_info.data.keyboard_intput_report);
+        gatt_param.host_id = host_id;
+        gatt_param.handle_num = p_profile_info->svcs_info_hids.server_info.handles.hdl_keyboard_input_report;
+        gatt_param.length = sizeof(p_profile_info->svcs_info_hids.server_info.data.keyboard_intput_report);
+        gatt_param.p_data = p_profile_info->svcs_info_hids.server_info.data.keyboard_intput_report;
+
+        status = ble_svcs_data_send(TYPE_BLE_GATT_READ_RSP, &gatt_param);
         if(status != BLE_ERR_OK)
         {
             printf("ble_svcs_data_send fail!!!");
@@ -1143,7 +1181,11 @@ static void gpio_pin_key_init(void)
     hosal_gpio_cfg_input_parameters(GPIO4, key_gpio4, true);
 }
 
-
+static void gpio_LED_init(void)
+{
+    hosal_gpio_cfg_output(LED_PIN_CAPSLOCK);
+    hosal_gpio_pin_set(LED_PIN_CAPSLOCK);
+}
 
 /**
  * @brief Initializes the GATT service data.
@@ -1405,7 +1447,7 @@ static void app_init(void)
     //app_uart_init();
     uart_stdio_init();
     gpio_pin_key_init();
-
+    gpio_LED_init();
     NVIC_EnableIRQ(Gpio_IRQn);
     
 }
