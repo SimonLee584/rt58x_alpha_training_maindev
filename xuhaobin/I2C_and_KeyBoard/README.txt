@@ -21,6 +21,11 @@ I2C Slave
 		  KEY1——1键
 		  KEY2——A键
 		  KEY3——B键
-		  KEY4——C键
+		  KEY4——CapsLock键
 2、实现逻辑：按下或松开任意按键，触发中断回调，发送相关键盘处理消息到队列中，
 		  主任务获取队列并解析消息后，获取并发送报告给客户端。
+
+更新说明：1、将原本的KEY4对应键关系从C键改为CapsLOCK键，验证Output Report，当
+		   按下BLE键盘或者电脑键盘的CapsLock键时，BLE键盘将收到电脑发送的
+		   Output Report,从而实现双方LED状态的同步
+		2、解决键盘与电脑连接时无法工作及出现断连的情况
