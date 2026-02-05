@@ -34,6 +34,7 @@ typedef enum
     APP_REQUEST_HIDS_NUMERIC_COMP_ENTRY, /**< Application request event: numeric comparison entry.*/
     APP_REQUEST_HIDS_NTF,                /**< Application request event: HID notification.*/
     APP_REQUEST_KEY_PRESS,               /**< Application request event: key press.*/
+    APP_REQUEST_HIDS_READ_RESPOND,       /**< Application request event: HIDS read respond.*/
 } app_request_t;
 
 typedef enum

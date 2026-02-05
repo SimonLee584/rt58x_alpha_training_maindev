@@ -158,34 +158,53 @@ const uint8_t hids_information[] =
 */
 const uint8_t hids_report_map[] =    //Device Class Definition for Human Interface Devices (HID) Version 1.11, 6.2.2 Report Descriptor
 {
-    0x05, 0x01,
-    0x09, 0x06,
-    0xa1, 0x01,
-    0x85, 0x01,
-    0x05, 0x08,
-    0x19, 0x01,
-    0x29, 0x03,
-    0x75, 0x01,
-    0x95, 0x03,
-    0x15, 0x00,
-    0x25, 0x01,
-    0x91, 0x02,
-    0x95, 0x05,
-    0x91, 0x01,
-    0x05, 0x07,
-    0x19, 0xe0,
-    0x29, 0xe7,
-    0x95, 0x08,
-    0x81, 0x02,
-    0x75, 0x08,
-    0x95, 0x01,
-    0x81, 0x01,
-    0x19, 0x00,
-    0x29, 0x91,
-    0x26, 0xff, 0x00,
-    0x95, 0x06,
-    0x81, 0x00,
-    0xc0,
+    // 1. 全局配置：指定设备所属“用途页”（Human Interface Device → 0x01）
+    0x05, 0x01,  // Usage Page (Generic Desktop) → 通用桌面设备大类
+    // 2. 局部配置：指定设备具体“用途”（Keyboard → 0x06）
+    0x09, 0x06,  // Usage (Keyboard) → 明确是键盘设备
+    // 3. 开启“应用集合”：标记键盘设备的描述开始
+    0xA1, 0x01,  // Collection (Application)
+    // 4. 分配 Report ID：该键盘段的唯一标识（ID=1）
+    0x85, 0x01,  // Report ID (1)
+    // -------------------------- 子段1：键盘LED指示灯（输出报告）--------------------------
+    // 用途页切换为“LED指示灯”（0x08），描述键盘的LED状态（如Caps Lock灯）
+    0x05, 0x08,  // Usage Page (LEDs)
+    0x19, 0x01,  // Usage Minimum (Num Lock) → 最小LED用途（Num Lock）
+    0x29, 0x03,  // Usage Maximum (Scroll Lock) → 最大LED用途（Scroll Lock）
+    0x75, 0x01,  // Report Size (1) → 每个LED状态用1位表示
+    0x95, 0x03,  // Report Count (3) → 共3个LED（Num Lock/Caps Lock/Scroll Lock）
+    0x15, 0x00,  // Logical Minimum (0) → LED状态：0=灭
+    0x25, 0x01,  // Logical Maximum (1) → LED状态：1=亮
+    // 输出报告配置：数据回传主机（表示主机控制LED），数据类型为“常量”（主机下发固定值）
+    0x91, 0x02,  // Output (Data,Var,Abs,No Wrap,Linear,Preferred State,No Null Position)
+    // 补充5位“填充位”（LED仅用3位，剩余5位无意义，设为“常量”不占用数据位）
+    0x95, 0x05,  // Report Count (5) → 5个填充位
+    0x91, 0x01,  // Output (Constant) → 填充位为常量，不传输实际数据
+
+    // -------------------------- 子段2：键盘按键（输入报告）--------------------------
+    // 用途页切换回“按键”（0x07），描述键盘的按键输入
+    0x05, 0x07,  // Usage Page (Keyboard)
+    0x19, 0xE0,  // Usage Minimum (Left Control) → 最小修饰键（左Ctrl）
+    0x29, 0xE7,  // Usage Maximum (Right GUI) → 最大修饰键（右Win键）
+    0x95, 0x08,  // Report Count (8) → 共8个修饰键（左Ctrl/Shift/Alt/Win + 右4键）
+    // 输入报告配置：设备向主机传输数据（按键状态），数据类型为“变量”（每个键独立）
+    0x81, 0x02,  // Input (Data,Var,Abs,No Wrap,Linear,Preferred State,No Null Position)
+
+    // 补充1字节“保留位”（无意义，设为“常量”）
+    0x75, 0x08,  // Report Size (8) → 1字节=8位
+    0x95, 0x01,  // Report Count (1) → 1个保留字节
+    0x81, 0x01,  // Input (Constant) → 保留位为常量
+
+    // 普通按键区：支持0-145号按键（覆盖标准键盘所有键，如A-Z、数字键、功能键）
+    0x19, 0x00,  // Usage Minimum (Reserved) → 最小按键码（0，保留）
+    0x29, 0x91,  // Usage Maximum (Keyboard Application) → 最大按键码（145，应用键）
+    0x26, 0xFF, 0x00,  // Logical Maximum (255) → 按键码最大255（兼容扩展键）
+    0x95, 0x06,  // Report Count (6) → 支持“6键无冲”（同时按下6个键不冲突）
+    // 输入报告配置：设备向主机传输按键码，数据类型为“数组”（多键同时传输）
+    0x81, 0x00,  // Input (Data,Array,Abs,No Wrap,Linear,Preferred State,No Null Position)
+    
+    // 5. 结束“应用集合”：键盘设备描述结束
+    0xC0,  // End Collection
 
     0x05, 0x01,
     0x09, 0x02,

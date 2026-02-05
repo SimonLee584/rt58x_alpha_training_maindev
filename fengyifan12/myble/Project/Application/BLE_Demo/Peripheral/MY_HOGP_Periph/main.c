@@ -117,52 +117,82 @@ static void gpio_key_init(void)
     printf("[GPIO] Keys initialized (GPIO0-4 for A-E)\n");
 }
 
-/* Scan GPIO keys and return pressed key code (0=no key, 1-5=KEY0-4) */
+/* Scan GPIO keys and return key event code
+ * Return: 0=no event, 1-6=key press, 0xFF=key release
+ */
 static uint8_t gpio_key_scan(void)
 {
+    static uint8_t last_gpio_state[5] = {1, 1, 1, 1, 1};  // 1=released (active low), init state
+    static uint8_t last_pressed_key = 0;  // Record last pressed key for release detection
     uint8_t key_val = 0;
+    uint8_t current_gpio;
     
-    // Read GPIO states (active low)
-    if (gpio_pin_get(GPIO0) == 0)
+    // Check GPIO0 (KEY A)
+    current_gpio = gpio_pin_get(GPIO0);
+    if (current_gpio == 0 && last_gpio_state[0] == 1)
     {
-        key_val = 1;  // KEY0 -> 'A'
+        key_val = 1;  // KEY0 -> 'A' pressed
+        last_pressed_key = 1;
         g_key_press_state = 1;
-        while(gpio_pin_get(GPIO0) == 0);  // Wait for key release
     }
-    else if (gpio_pin_get(GPIO1) == 0)
+    else if (current_gpio == 1 && last_gpio_state[0] == 0)
     {
-        key_val = 2;  // KEY1 -> 'B'
+        key_val = 0xFF;  // KEY0 released
+        last_pressed_key = 0;
         g_key_press_state = 1;
-        while(gpio_pin_get(GPIO1) == 0);  // Wait for key release
     }
-    else if (gpio_pin_get(GPIO2) == 0) 
+    last_gpio_state[0] = current_gpio;
+    if (key_val != 0) return key_val;
+    
+    // Check GPIO1 (KEY B)
+    current_gpio = gpio_pin_get(GPIO1);
+    if (current_gpio == 0 && last_gpio_state[1] == 1)
     {
-        key_val = 3;  // KEY2 -> 'C'
+        key_val = 2;  // KEY1 -> 'B' pressed
+        last_pressed_key = 2;
         g_key_press_state = 1;
-        while(gpio_pin_get(GPIO2) == 0);  // Wait for key release
     }
-    // else if (gpio_pin_get(GPIO3) == 0)
-    // {
-    //     key_val = 4;  // KEY3 -> 'D'
-    //     g_key_press_state = 1;
-    //     // while(gpio_pin_get(GPIO3) == 0);  // Wait for key release
-    // }
-    else if (gpio_pin_get(GPIO4) == 0)
+    else if (current_gpio == 1 && last_gpio_state[1] == 0)
     {
-        static uint8_t modifier_flag = 0;
-        if(modifier_flag == 0)
-        {
-            key_val = 5;  // KEY4 -> 'Left_Shift_modifier'
-            modifier_flag = 1;
-        }
-        else
-        {
-            key_val = 6;  // KEY4 -> 'modifier_clear'
-            modifier_flag = 0;
-        }
+        key_val = 0xFF;  // KEY1 released
+        last_pressed_key = 0;
         g_key_press_state = 1;
-        while(gpio_pin_get(GPIO4) == 0);  // Wait for key release
     }
+    last_gpio_state[1] = current_gpio;
+    if (key_val != 0) return key_val;
+    
+    // Check GPIO2 (KEY C)
+    current_gpio = gpio_pin_get(GPIO2);
+    if (current_gpio == 0 && last_gpio_state[2] == 1)
+    {
+        key_val = 3;  // KEY2 -> 'C' pressed
+        last_pressed_key = 3;
+        g_key_press_state = 1;
+    }
+    else if (current_gpio == 1 && last_gpio_state[2] == 0)
+    {
+        key_val = 0xFF;  // KEY2 released
+        last_pressed_key = 0;
+        g_key_press_state = 1;
+    }
+    last_gpio_state[2] = current_gpio;
+    if (key_val != 0) return key_val;
+    
+    // Check GPIO4 (Modifier key - Shift)
+    current_gpio = gpio_pin_get(GPIO4);
+    if (current_gpio == 0 && last_gpio_state[4] == 1)
+    {
+        key_val = 5;  // KEY4 -> 'Left_Shift_modifier' pressed
+        last_pressed_key = 5;
+        g_key_press_state = 1;
+    }
+    else if (current_gpio == 1 && last_gpio_state[4] == 0)
+    {
+        key_val = 6;  // KEY4 -> 'modifier_clear' (released)
+        last_pressed_key = 0;
+        g_key_press_state = 1;
+    }
+    last_gpio_state[4] = current_gpio;
     
     return key_val;
 }

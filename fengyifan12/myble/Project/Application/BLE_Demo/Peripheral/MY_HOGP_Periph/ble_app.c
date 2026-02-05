@@ -56,27 +56,6 @@ static const ble_gap_addr_t  DEVICE_ADDR = {.addr_type = RANDOM_STATIC_ADDR,
                                             .addr = {0x01, 0x02, 0x03, 0x04, 0x05, 0xC6 }
                                            };
 
-//HIDS Consumer keycode table
-const uint8_t hids_consumer_report_keycode_demo[][2] =
-{
-    {0xE9, 0x00,},  //vol+
-    {0xEA, 0x00,},  //vol-
-    {0xE2, 0x00,},  //Mute
-    {0xB0, 0x00,},  //Play
-    {0xB1, 0x00,},  //Pause
-    {0xB3, 0x00,},  //Fast forward
-    {0xB4, 0x00,},  //Rewind
-    {0xB5, 0x00,},  //Scan next track
-    {0xB6, 0x00,},  //Scan previous track
-    {0xB7, 0x00,},  //Stop
-    {0xB8, 0x00,},  //Eject
-    {0x8A, 0x01,},  //Email reader
-    {0x96, 0x01,},  //Internet browser
-    {0x9E, 0x01,},  //Terminal lock/screensaver
-    {0xC6, 0x01,},  //Research/search browser
-    {0x2D, 0x02,},  //Zoom in
-};
-
 #define STATE_HID_REPORT_CS_INITIAL             0
 #define STATE_HID_REPORT_CS_DATA_UPD            0x01
 
@@ -85,15 +64,6 @@ const uint8_t hids_consumer_report_keycode_demo[][2] =
 
 #define HDL_HIDS_REPORT_TAB_CSKEY_L             0
 #define HDL_HIDS_REPORT_TAB_CSKEY_H             1
-
-#define HDL_HIDS_REPORT_TAB_KEY_L_R             0
-#define HDL_HIDS_REPORT_TAB_DIR_L_R_L           1
-#define HDL_HIDS_REPORT_TAB_DIR_L_R_H           2
-#define HDL_HIDS_REPORT_TAB_DIR_U_D_L           3
-#define HDL_HIDS_REPORT_TAB_DIR_U_D_H           4
-#define HDL_HIDS_REPORT_TAB_ROL_U_D             5
-#define HDL_HIDS_REPORT_TAB_ROL_L_R_L           6
-#define HDL_HIDS_REPORT_TAB_ROL_L_R_H           7
 
 #define HDL_HIDS_REPORT_TAB_KEY_CTRL            0
 #define HDL_HIDS_REPORT_TAB_KEY_DATA0           2
@@ -125,14 +95,6 @@ static ble_cfg_t gt_app_cfg;
 static TimerHandle_t  g_hids_timer;
 
 static uint8_t g_advertising_host_id = BLE_HOSTID_RESERVED;
-
-static uint8_t hid_report_count;
-
-static uint8_t hid_consumer_report_state;      //consumer report state
-static uint8_t hid_consumer_report_count;      //consumer control value. Here use to control volume
-
-static uint8_t hid_keyboard_report_state;      //keyboard report state
-static uint8_t hid_keyboard_report_count;      //keyboard control value. Here use to control keycode.
 
 static uint8_t g_current_key_code = 0;         //current pressed key code (0=none, 1-5=A-E)
 
@@ -173,15 +135,6 @@ static void hids_timer_handler( TimerHandle_t timer)
     extern void gpio_key_scan_task(void);
     gpio_key_scan_task();
 
-    // // HIDS
-    // if (ble_app_link_info[APP_HID_P_HOST_ID].state == STATE_CONNECTED)
-    // {
-    //     // send HIDS data
-    //     if (app_request_set(APP_HID_P_HOST_ID, APP_REQUEST_HIDS_NTF, false) == false)
-    //     {
-    //         // No Application queue buffer. Error.
-    //     }
-    // }
 }
 
 static void ble_svcs_hids_evt_handler(ble_evt_att_param_t *p_param)
@@ -213,40 +166,7 @@ static void ble_svcs_hids_evt_handler(ble_evt_att_param_t *p_param)
                     info_color(LOG_RED, "HIDS timer start failed. \n");
                 }
             }
-            break;
-
-        case BLESERVICE_HIDS_BOOT_MOUSE_INPUT_REPORT_CCCD_WRITE_EVENT:
-            if ((p_profile_info->svcs_info_hids.server_info.data.boot_mouse_input_report_cccd & BLEGATT_CCCD_NOTIFICATION) != 0)
-            {
-                // notify enabled -> start HIDS timer to send notification
-                if (hids_sw_timer_start() == false)
-                {
-                    info_color(LOG_RED, "HIDS timer start failed. \n");
-                }
-            }
-            break;
-
-        case BLESERVICE_HIDS_MOUSE_INPUT_REPORT_CCCD_WRITE_EVENT:
-            if ((p_profile_info->svcs_info_hids.server_info.data.mouse_input_report_cccd & BLEGATT_CCCD_NOTIFICATION) != 0)
-            {
-                // notify enabled -> start HIDS timer to send notification
-                if (hids_sw_timer_start() == false)
-                {
-                    info_color(LOG_RED, "HIDS timer start failed. \n");
-                }
-            }
-            break;
-
-        case BLESERVICE_HIDS_CONSUMER_INPUT_REPORT_CCCD_WRITE_EVENT:
-            if ((p_profile_info->svcs_info_hids.server_info.data.consumer_input_report_cccd & BLEGATT_CCCD_NOTIFICATION) != 0)
-            {
-                // notify enabled -> start HIDS timer to send notification
-                if (hids_sw_timer_start() == false)
-                {
-                    info_color(LOG_RED, "HIDS timer start failed. \n");
-                }
-            }
-            break;
+            break;        
 
         default:
             break;
@@ -295,9 +215,6 @@ static void app_peripheral_handler(app_req_param_t *p_param)
                 info_color(LOG_RED, "adv_enable() status = %d\n", status);
                 break;
             }
-
-            // reset report count
-            hid_report_count = 0;
         } while (0);
 
         break;
@@ -333,49 +250,59 @@ static void app_peripheral_handler(app_req_param_t *p_param)
 
     case APP_REQUEST_KEY_PRESS:
     {
-        // Handle GPIO key press (A-E)
+        // Handle GPIO key press/release event
         if (p_profile_info->svcs_info_hids.server_info.data.keyboard_input_report_cccd != 0)
         {
             ble_gatt_data_param_t gatt_param;
-            uint8_t key_code = 0;
             
-            // Map key number (1-5) to HID scan code
-            switch(g_current_key_code)
+            // Check if this is a key release event (0xFF)
+            if (g_current_key_code == 0xFF)
             {
-                case 1: key_code = HID_KEY_A; break;  // GPIO0 -> 'A'
-                case 2: key_code = HID_KEY_B; break;  // GPIO1 -> 'B'
-                case 3: key_code = HID_KEY_C; break;  // GPIO2 -> 'C'
-                case 5: key_code = Left_Shift_modifier; break;  // GPIO4 -> 'Left_Shift_modifier'
-                case 6: key_code = modifier_clear; break;  // GPIO4 -> 'modifier_clear'
-                default: key_code = 0; break;
+                // Clear all key data in HID report
+                p_profile_info->svcs_info_hids.server_info.data.keyboard_intput_report[HDL_HIDS_REPORT_TAB_KEY_CTRL] = 0;
+                p_profile_info->svcs_info_hids.server_info.data.keyboard_intput_report[HDL_HIDS_REPORT_TAB_KEY_DATA0] = 0;
+                p_profile_info->svcs_info_hids.server_info.data.keyboard_intput_report[HDL_HIDS_REPORT_TAB_KEY_DATA1] = 0;
+                p_profile_info->svcs_info_hids.server_info.data.keyboard_intput_report[HDL_HIDS_REPORT_TAB_KEY_DATA2] = 0;
+                p_profile_info->svcs_info_hids.server_info.data.keyboard_intput_report[HDL_HIDS_REPORT_TAB_KEY_DATA3] = 0;
+                p_profile_info->svcs_info_hids.server_info.data.keyboard_intput_report[HDL_HIDS_REPORT_TAB_KEY_DATA4] = 0;
+                p_profile_info->svcs_info_hids.server_info.data.keyboard_intput_report[HDL_HIDS_REPORT_TAB_KEY_DATA5] = 0;
+                
+                printf("[KEY] Released - clearing all keys\n");
             }
-            
-            // Send key press
-            if(g_current_key_code == 5)
-                p_profile_info->svcs_info_hids.server_info.data.keyboard_intput_report[HDL_HIDS_REPORT_TAB_KEY_CTRL] = Left_Shift_modifier;
-            else if(g_current_key_code == 6)
-                p_profile_info->svcs_info_hids.server_info.data.keyboard_intput_report[HDL_HIDS_REPORT_TAB_KEY_CTRL] = modifier_clear;
             else
-                p_profile_info->svcs_info_hids.server_info.data.keyboard_intput_report[HDL_HIDS_REPORT_TAB_KEY_DATA0] = key_code;
-            
-            printf("[KEY] Pressed: %c (code=0x%02x)\n", 'A' + g_current_key_code - 1, key_code);
-            
-            // Send HID report
-            gatt_param.host_id = host_id;
-            gatt_param.handle_num = p_profile_info->svcs_info_hids.server_info.handles.hdl_keyboard_input_report;
-            gatt_param.length = sizeof(p_profile_info->svcs_info_hids.server_info.data.keyboard_intput_report);
-            gatt_param.p_data = p_profile_info->svcs_info_hids.server_info.data.keyboard_intput_report;
-            
-            status = ble_svcs_data_send(TYPE_BLE_GATT_NOTIFICATION, &gatt_param);
-            if (status != BLE_ERR_OK)
             {
-                info_color(LOG_RED, "[KEY] Send failed: %d\n", status);
+                // Key press event - map key number to HID scan code
+                uint8_t key_code = 0;
+                
+                switch(g_current_key_code)
+                {
+                    case 1: key_code = HID_KEY_A; break;  // GPIO0 -> 'A'
+                    case 2: key_code = HID_KEY_B; break;  // GPIO1 -> 'B'
+                    case 3: key_code = HID_KEY_C; break;  // GPIO2 -> 'C'
+                    case 5: key_code = Left_Shift_modifier; break;  // GPIO4 -> Left Shift pressed
+                    case 6: key_code = modifier_clear; break;  // GPIO4 -> modifier released
+                    default: key_code = 0; break;
+                }
+                
+                // Fill HID report based on key type
+                if(g_current_key_code == 5)  // Shift pressed
+                {
+                    p_profile_info->svcs_info_hids.server_info.data.keyboard_intput_report[HDL_HIDS_REPORT_TAB_KEY_CTRL] = Left_Shift_modifier;
+                    printf("[KEY] Modifier Pressed: Left Shift (0x%02x)\n", key_code);
+                }
+                else if(g_current_key_code == 6)  // Shift released
+                {
+                    p_profile_info->svcs_info_hids.server_info.data.keyboard_intput_report[HDL_HIDS_REPORT_TAB_KEY_CTRL] = modifier_clear;
+                    printf("[KEY] Modifier Released: Left Shift cleared\n");
+                }
+                else  // Normal key
+                {
+                    p_profile_info->svcs_info_hids.server_info.data.keyboard_intput_report[HDL_HIDS_REPORT_TAB_KEY_DATA0] = key_code;
+                    printf("[KEY] Pressed: %c (code=0x%02x)\n", 'A' + g_current_key_code - 1, key_code);
+                }
             }
-
-            // Send key release
-            p_profile_info->svcs_info_hids.server_info.data.keyboard_intput_report[HDL_HIDS_REPORT_TAB_KEY_DATA0] = 0;
             
-            // Send HID report
+            // Send HID report (press or release)
             gatt_param.host_id = host_id;
             gatt_param.handle_num = p_profile_info->svcs_info_hids.server_info.handles.hdl_keyboard_input_report;
             gatt_param.length = sizeof(p_profile_info->svcs_info_hids.server_info.data.keyboard_intput_report);
@@ -389,184 +316,7 @@ static void app_peripheral_handler(app_req_param_t *p_param)
         }
     }
     break;
-    
-    case APP_REQUEST_HIDS_NTF:
-    {
-        ble_gatt_data_param_t gatt_param;
 
-        // send heart rate measurement value to client
-        if ((hid_report_count & 0x3F) != 0x3F)    //(counter value!=0x3F or 0x7F or 0xBF or 0xFF)
-        {
-            if (hid_report_count < 0x80)
-            {
-                if (p_profile_info->svcs_info_hids.server_info.data.mouse_input_report_cccd != 0)
-                {
-                    if (hid_report_count <= 0x1F)    //counter 0~0x1F, mouse move right-down
-                    {
-                        p_profile_info->svcs_info_hids.server_info.data.mouse_input_report[HDL_HIDS_REPORT_TAB_DIR_L_R_L] = 0x05;    // right
-                        p_profile_info->svcs_info_hids.server_info.data.mouse_input_report[HDL_HIDS_REPORT_TAB_DIR_L_R_H] = 0x00;
-                        p_profile_info->svcs_info_hids.server_info.data.mouse_input_report[HDL_HIDS_REPORT_TAB_DIR_U_D_L] = 0x05;    // down
-                        p_profile_info->svcs_info_hids.server_info.data.mouse_input_report[HDL_HIDS_REPORT_TAB_DIR_U_D_H] = 0x00;
-                    }
-                    else if (hid_report_count <= 0x3F)    //counter 0x20~0x3F, mouse move left-down
-                    {
-                        p_profile_info->svcs_info_hids.server_info.data.mouse_input_report[HDL_HIDS_REPORT_TAB_DIR_L_R_L] = 0xFA;    // left
-                        p_profile_info->svcs_info_hids.server_info.data.mouse_input_report[HDL_HIDS_REPORT_TAB_DIR_L_R_H] = 0xFF;
-                        p_profile_info->svcs_info_hids.server_info.data.mouse_input_report[HDL_HIDS_REPORT_TAB_DIR_U_D_L] = 0x05;    // down
-                        p_profile_info->svcs_info_hids.server_info.data.mouse_input_report[HDL_HIDS_REPORT_TAB_DIR_U_D_H] = 0x00;
-                    }
-                    else if (hid_report_count <= 0x5F)    //counter 0x40~0x5F, mouse move left-up
-                    {
-                        p_profile_info->svcs_info_hids.server_info.data.mouse_input_report[HDL_HIDS_REPORT_TAB_DIR_L_R_L] = 0xFA;    // left
-                        p_profile_info->svcs_info_hids.server_info.data.mouse_input_report[HDL_HIDS_REPORT_TAB_DIR_L_R_H] = 0xFF;
-                        p_profile_info->svcs_info_hids.server_info.data.mouse_input_report[HDL_HIDS_REPORT_TAB_DIR_U_D_L] = 0xFA;    // up
-                        p_profile_info->svcs_info_hids.server_info.data.mouse_input_report[HDL_HIDS_REPORT_TAB_DIR_U_D_H] = 0xFF;
-                    }
-                    else if (hid_report_count <= 0x7F)    //counter 0x60~0x7F, mouse move right-up
-                    {
-                        p_profile_info->svcs_info_hids.server_info.data.mouse_input_report[HDL_HIDS_REPORT_TAB_DIR_L_R_L] = 0x05;    // right
-                        p_profile_info->svcs_info_hids.server_info.data.mouse_input_report[HDL_HIDS_REPORT_TAB_DIR_L_R_H] = 0x00;
-                        p_profile_info->svcs_info_hids.server_info.data.mouse_input_report[HDL_HIDS_REPORT_TAB_DIR_U_D_L] = 0xFA;    // up
-                        p_profile_info->svcs_info_hids.server_info.data.mouse_input_report[HDL_HIDS_REPORT_TAB_DIR_U_D_H] = 0xFF;
-                    }
-
-                    // set parameters
-                    gatt_param.host_id = host_id;
-                    gatt_param.handle_num = p_profile_info->svcs_info_hids.server_info.handles.hdl_mouse_input_report;
-                    gatt_param.length = sizeof(p_profile_info->svcs_info_hids.server_info.data.mouse_input_report);
-                    gatt_param.p_data = p_profile_info->svcs_info_hids.server_info.data.mouse_input_report;
-
-                    // send notification
-                    status = ble_svcs_data_send(TYPE_BLE_GATT_NOTIFICATION, &gatt_param);
-                    if (status == BLE_ERR_OK)
-                    {
-                        hid_report_count++;    //counter++
-                    }
-                }
-                else
-                {
-                    hid_report_count++;    //counter++
-                }
-            }
-            else
-            {
-                hid_report_count++;    //counter++
-            }
-        }
-        else    //(counter vlaue==0x3F or 0x7F or 0xBF or 0xFF)
-        {
-            if ((hid_report_count == 0x3F) || (hid_report_count == 0xBF))    //control keyboard when counter=0x3F, 0xBF
-            {
-                if (p_profile_info->svcs_info_hids.server_info.data.keyboard_input_report_cccd != 0)
-                {
-                    if ((hid_keyboard_report_state & STATE_HID_REPORT_KB_DATA_UPD) == 0)   //check keyboard report status
-                    {
-                        if ((hid_keyboard_report_count <= 0x04) || (hid_keyboard_report_count >= 0x27))
-                        {
-                            hid_keyboard_report_count = 0x04;    //0x04 mean 'a'; 0x27 mean '9'; see USB HID spec.
-                        }
-                        p_profile_info->svcs_info_hids.server_info.data.keyboard_intput_report[HDL_HIDS_REPORT_TAB_KEY_DATA0] = hid_keyboard_report_count;    // repeat keyCode: 'a' 'b' ~ 'z' ~ '1' '2'  ~ '9'
-
-                        // set parameters
-                        gatt_param.host_id = host_id;
-                        gatt_param.handle_num = p_profile_info->svcs_info_hids.server_info.handles.hdl_keyboard_input_report;
-                        gatt_param.length = sizeof(p_profile_info->svcs_info_hids.server_info.data.keyboard_intput_report);
-                        gatt_param.p_data = p_profile_info->svcs_info_hids.server_info.data.keyboard_intput_report;
-
-                        // send notification
-                        status = ble_svcs_data_send(TYPE_BLE_GATT_NOTIFICATION, &gatt_param);
-                        if (status == BLE_ERR_OK)
-                        {
-                            hid_keyboard_report_state |= STATE_HID_REPORT_KB_DATA_UPD;
-                            hid_keyboard_report_count++;    //keyboard keycode
-                        }
-                    }
-                    else    //release key
-                    {
-                        p_profile_info->svcs_info_hids.server_info.data.keyboard_intput_report[HDL_HIDS_REPORT_TAB_KEY_DATA0] = 0x00;    // release key
-
-                        // set parameters
-                        gatt_param.host_id = host_id;
-                        gatt_param.handle_num = p_profile_info->svcs_info_hids.server_info.handles.hdl_keyboard_input_report;
-                        gatt_param.length = sizeof(p_profile_info->svcs_info_hids.server_info.data.keyboard_intput_report);
-                        gatt_param.p_data = p_profile_info->svcs_info_hids.server_info.data.keyboard_intput_report;
-
-                        // send notification
-                        status = ble_svcs_data_send(TYPE_BLE_GATT_NOTIFICATION, &gatt_param);
-                        if (status == BLE_ERR_OK)
-                        {
-                            hid_keyboard_report_state &= ~STATE_HID_REPORT_KB_DATA_UPD;
-                            hid_report_count++;
-                        }
-                    }
-                }
-                else
-                {
-                    hid_report_count++;
-                }
-            }
-            if ((hid_report_count == 0x7F) || (hid_report_count == 0xFF))    //control volume when counter=0x7F, 0xFF
-            {
-                if (p_profile_info->svcs_info_hids.server_info.data.consumer_input_report_cccd != 0)
-                {
-                    if ((hid_consumer_report_state & STATE_HID_REPORT_CS_DATA_UPD) == 0)    // check consumer report status
-                    {
-                        if ((hid_consumer_report_count & 0x01) == 0x01)
-                        {
-                            p_profile_info->svcs_info_hids.server_info.data.consumer_input_report[0] = hids_consumer_report_keycode_demo[0][0];    // vol+
-                            p_profile_info->svcs_info_hids.server_info.data.consumer_input_report[1] = hids_consumer_report_keycode_demo[0][1];
-                        }
-                        else
-                        {
-                            p_profile_info->svcs_info_hids.server_info.data.consumer_input_report[0] = hids_consumer_report_keycode_demo[2][0];    // mute
-                            p_profile_info->svcs_info_hids.server_info.data.consumer_input_report[1] = hids_consumer_report_keycode_demo[2][1];
-                        }
-
-
-                        // set parameters
-                        gatt_param.host_id = host_id;
-                        gatt_param.handle_num = p_profile_info->svcs_info_hids.server_info.handles.hdl_consumer_input_report;
-                        gatt_param.length = sizeof(p_profile_info->svcs_info_hids.server_info.data.consumer_input_report);
-                        gatt_param.p_data = p_profile_info->svcs_info_hids.server_info.data.consumer_input_report;
-
-                        // send notification
-                        status = ble_svcs_data_send(TYPE_BLE_GATT_NOTIFICATION, &gatt_param);
-                        if (status == BLE_ERR_OK)
-                        {
-                            hid_consumer_report_state |= STATE_HID_REPORT_CS_DATA_UPD;
-                            hid_consumer_report_count++;    // just counter for send another consumer data
-                        }
-                    }
-                    else    //release key
-                    {
-                        p_profile_info->svcs_info_hids.server_info.data.consumer_input_report[0] = 0x00;    // release key
-                        p_profile_info->svcs_info_hids.server_info.data.consumer_input_report[1] = 0x00;
-
-
-                        // set parameters
-                        gatt_param.host_id = host_id;
-                        gatt_param.handle_num = p_profile_info->svcs_info_hids.server_info.handles.hdl_consumer_input_report;
-                        gatt_param.length = sizeof(p_profile_info->svcs_info_hids.server_info.data.consumer_input_report);
-                        gatt_param.p_data = p_profile_info->svcs_info_hids.server_info.data.consumer_input_report;
-
-                        // send notification
-                        status = ble_svcs_data_send(TYPE_BLE_GATT_NOTIFICATION, &gatt_param);
-                        if (status == BLE_ERR_OK)
-                        {
-                            hid_consumer_report_state &= ~STATE_HID_REPORT_CS_DATA_UPD;
-                            hid_report_count++;
-                        }
-                    }
-                }
-                else
-                {
-                    hid_report_count++;
-                }
-            }
-        }
-    }
-    break;
-    
     default:
         break;
     }
@@ -1117,9 +867,6 @@ static void svcs_hids_data_init(ble_svcs_hids_data_t *p_data)
 {
     p_data->boot_keyboard_input_report_cccd = 0;
     p_data->keyboard_input_report_cccd = 0;
-    p_data->boot_mouse_input_report_cccd = 0;
-    p_data->mouse_input_report_cccd = 0;
-    p_data->consumer_input_report_cccd = 0;
 }
 
 static ble_err_t server_profile_init(uint8_t host_id)

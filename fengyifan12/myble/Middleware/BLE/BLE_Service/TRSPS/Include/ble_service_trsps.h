@@ -54,6 +54,17 @@ extern const ble_att_param_t att_trsps_characteristic_udatrw01;                /
 extern const ble_att_param_t att_trsps_udatrw01;                               /**< TRSPS UDATRW01 value. */
 /** @} */
 
+/**
+ * @ingroup service_trsps_ServiceChardef
+ * @{
+*/
+extern const ble_att_param_t att_custom_primary_service;                        /**< Custom primary service. */
+extern const ble_att_param_t att_custom_characteristic_custdata01;              /**< Custom characteristic CUSTDATA01. */
+extern const ble_att_param_t att_custom_custdata01;                               /**< Custom CUSTDATA01 value. */
+extern const ble_att_param_t att_custom_custdata01_client_charc_configuration;  /**< Custom CUSTDATA01 client characteristic configuration. */
+extern const ble_att_param_t att_custom_characteristic_custcmd01;               /**< Custom characteristic CUSTCMD01. */
+extern const ble_att_param_t att_custom_custcmd01;                              /**< Custom CUSTCMD01 value. */
+/** @} */
 
 /** TRSPS Definition
  * @ingroup service_trsps_ServiceChardef
@@ -68,6 +79,16 @@ extern const ble_att_param_t att_trsps_udatrw01;                               /
     &att_trsps_characteristic_udatrw01,                      \
     &att_trsps_udatrw01                                      \
 
+/** Custom Service Definition
+ * @ingroup service_trsps_ServiceChardef
+*/
+#define ATT_CUSTOM_SERVICE                                    \
+    &att_custom_primary_service,                              \
+    &att_custom_characteristic_custdata01,                    \
+    &att_custom_custdata01,                                   \
+    &att_custom_custdata01_client_charc_configuration,        \
+    &att_custom_characteristic_custcmd01,                     \
+    &att_custom_custcmd01
 
 /**************************************************************************
  * TRSPS Application Definitions
@@ -99,6 +120,10 @@ extern const ble_att_param_t att_trsps_udatrw01;                               /
 #define BLESERVICE_TRSPS_UDATRW01_WRITE_EVENT                 0x0c     /**< TRSPS characteristic UDATRW01 write event.*/
 #define BLESERVICE_TRSPS_UDATRW01_WRITE_RSP_EVENT             0x0d     /**< TRSPS characteristic UDATRW01 write response event.*/
 #define BLESERVICE_TRSPS_UDATRW01_WRITE_WITHOUT_RSP_EVENT     0x0e     /**< TRSPS characteristic UDATRW01 write without response event.*/
+
+#define BLESERVICE_CUSTOM_CUSTDATA01_READ_EVENT              0x0f     /**< Custom characteristic CUSTDATA01 read event.*/
+#define BLESERVICE_CUSTOM_CUSTCMD01_WRITE_EVENT              0x10     /**< Custom characteristic CUSTCMD01 write event.*/
+#define BLESERVICE_CUSTOM_CUSTCMD01_WRITE_WITHOUT_RSP_EVENT  0x11     /**< Custom characteristic CUSTCMD01 write without response event.*/
 /** @} */
 
 
@@ -261,5 +286,49 @@ ble_err_t ble_svcs_trsps_client_read(uint8_t host_id, uint16_t handle_num);
  * @retval BLE_ERR_OK  : Setting success.
 */
 ble_err_t ble_svcs_trsps_server_send(uint8_t host_id, ble_gatt_cccd_val_t cccd, uint16_t handle_num, uint8_t *p_data, uint8_t length);
+
+
+/* Custom Service Functions */
+
+/** Initialize Custom Service
+*
+* @ingroup app_custom_App
+*
+* @param[in] host_id : the link's host id.
+* @param[in] callback : the event handler callback function.
+*
+* @retval void
+*/
+void ble_svcs_custom_init(uint8_t host_id, ble_svcs_evt_trsps_handler_t callback);
+
+
+/** Send Custom Data - Notification or Indication
+*
+* @ingroup app_custom_App
+*
+* @param[in] host_id : the link's host id.
+* @param[in] cccd_type : BLEGATT_CCCD_NOTIFICATION or BLEGATT_CCCD_INDICATION.
+* @param[in] handle_num : attribute handle number.
+* @param[in] p_data : a pointer to send data buffer.
+* @param[in] length : send data length.
+*
+* @retval BLE_ERR_INVALID_PARAMETER : Invalid parameter.
+* @retval BLE_ERR_OK  : Setting success.
+*/
+ble_err_t ble_svcs_custom_server_send(uint8_t host_id, uint16_t cccd_type, uint16_t handle_num, const uint8_t *p_data, uint16_t length);
+
+
+/** Get Custom Service Information
+*
+* @ingroup app_custom_App
+*
+* @param[in] host_id : the link's host id.
+* @param[out] p_cccd : pointer to CUSTDATA01 CCCD value.
+* @param[out] p_handle : pointer to CUSTDATA01 handle number.
+*
+* @retval BLE_ERR_OK : Getting success.
+* @retval others : Error.
+*/
+ble_err_t ble_svcs_custom_info_get(uint8_t host_id, uint16_t *p_cccd, uint16_t *p_handle);
 
 #endif //_BLE_SERVICE_TRSPS_H_

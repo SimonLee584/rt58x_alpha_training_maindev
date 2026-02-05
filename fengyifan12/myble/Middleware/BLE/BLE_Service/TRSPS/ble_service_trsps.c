@@ -72,6 +72,38 @@ const uint16_t attr_uuid_trsps_charc_udatrw01[] =
     0x5253, 0x5051,
 };
 
+/** Custom Service UUID
+ * @note UUID: 0000FF01-0000-1000-8000-00805F9B34FB
+*/
+const uint16_t attr_uuid_custom_primary_service[] =
+{
+    0x34FB, 0x9B5F,
+    0x80F9, 0x0008,
+    0x1000, 0x0000,
+    0xFF01, 0x0000,
+};
+
+/** Custom Service characteristic CUSTDATA01 UUID (Report Data)
+ * @note UUID: 0000FF02-0000-1000-8000-00805F9B34FB
+*/
+const uint16_t attr_uuid_custom_charc_custdata01[] =
+{
+    0x34FB, 0x9B5F,
+    0x80F9, 0x0008,
+    0x1000, 0x0000,
+    0xFF02, 0x0000,
+};
+
+/** Custom Service characteristic CUSTCMD01 UUID (Downlink Command)
+ * @note UUID: 0000FF03-0000-1000-8000-00805F9B34FB
+*/
+const uint16_t attr_uuid_custom_charc_custcmd01[] =
+{
+    0x34FB, 0x9B5F,
+    0x80F9, 0x0008,
+    0x1000, 0x0000,
+    0xFF03, 0x0000,
+};
 
 /**************************************************************************
  * TRSPS Service Value Definitions
@@ -327,6 +359,206 @@ const ble_att_param_t att_trsps_udatrw01 =
     ble_svcs_trsps_handler,       //registered callback function
 };
 
+/**************************************************************************
+ * Custom Service/ Characteristic Definitions
+ **************************************************************************/
+const ble_att_param_t att_custom_primary_service = {
+    (void *)attr_uuid_type_primary_service,
+    (void *)attr_uuid_custom_primary_service,
+    sizeof(attr_uuid_custom_primary_service),
+    (
+        //GATT_DECLARATIONS_PROPERTIES_BROADCAST |
+        GATT_DECLARATIONS_PROPERTIES_READ |
+        //GATT_DECLARATIONS_PROPERTIES_WRITE_WITHOUT_RESPONSE |
+        //GATT_DECLARATIONS_PROPERTIES_WRITE |
+        //GATT_DECLARATIONS_PROPERTIES_NOTIFY |
+        //GATT_DECLARATIONS_PROPERTIES_INDICATE |
+        //GATT_DECLARATIONS_PROPERTIES_AUTHENTICATED_SIGNED_WRITES |
+        //GATT_DECLARATIONS_PROPERTIES_EXTENDED_PROPERTIES |
+        0x00
+    ),
+    (
+        ATT_TYPE_FORMAT_16UUID |            //otherwise, 128bit UUID
+        //ATT_VALUE_BOND_ENABLE |
+        //ATT_PERMISSION_ENC_READ |
+        //ATT_PERMISSION_ENC_WRITE |
+        //ATT_PERMISSION_AUTHE_READ |
+        //ATT_PERMISSION_AUTHE_WRITE |
+        //ATT_PERMISSION_AUTHO_READ |
+        //ATT_PERMISSION_AUTHO_WRITE |
+        0x00
+    ),
+    attr_null_access,                       //This function should be set to attr_null_access when att_len or p_uuid_value is a null value.
+};
+
+const ble_att_param_t att_custom_characteristic_custdata01 = {
+    (void *)attr_uuid_type_characteristic,
+    (void *)attr_uuid_custom_charc_custdata01,
+    sizeof(attr_uuid_custom_charc_custdata01),
+    (
+        //GATT_DECLARATIONS_PROPERTIES_BROADCAST |
+        GATT_DECLARATIONS_PROPERTIES_READ |
+        //GATT_DECLARATIONS_PROPERTIES_WRITE_WITHOUT_RESPONSE |
+        //GATT_DECLARATIONS_PROPERTIES_WRITE |
+        //GATT_DECLARATIONS_PROPERTIES_NOTIFY |
+        //GATT_DECLARATIONS_PROPERTIES_INDICATE |
+        //GATT_DECLARATIONS_PROPERTIES_AUTHENTICATED_SIGNED_WRITES |
+        //GATT_DECLARATIONS_PROPERTIES_EXTENDED_PROPERTIES |
+        0x00
+    ),
+    (
+        ATT_TYPE_FORMAT_16UUID |            //otherwise, 128bit UUID
+        //ATT_VALUE_BOND_ENABLE |
+        //ATT_PERMISSION_ENC_READ |
+        //ATT_PERMISSION_ENC_WRITE |
+        //ATT_PERMISSION_AUTHE_READ |
+        //ATT_PERMISSION_AUTHE_WRITE |
+        //ATT_PERMISSION_AUTHO_READ |
+        //ATT_PERMISSION_AUTHO_WRITE |
+        0x00
+    ),
+    attr_null_access,                       //This function should be set to attr_null_access when att_len or p_uuid_value is a null value.
+};
+
+const ble_att_param_t att_custom_custdata01 = {
+    (void *)attr_uuid_custom_charc_custdata01,
+    (void *)0,
+    0,
+    (
+        //GATT_DECLARATIONS_PROPERTIES_BROADCAST |
+        // GATT_DECLARATIONS_PROPERTIES_READ |
+        //GATT_DECLARATIONS_PROPERTIES_WRITE_WITHOUT_RESPONSE |
+        //GATT_DECLARATIONS_PROPERTIES_WRITE |
+        GATT_DECLARATIONS_PROPERTIES_NOTIFY |
+        GATT_DECLARATIONS_PROPERTIES_INDICATE |
+        //GATT_DECLARATIONS_PROPERTIES_AUTHENTICATED_SIGNED_WRITES |
+        //GATT_DECLARATIONS_PROPERTIES_EXTENDED_PROPERTIES |
+        0x00
+    ),
+    (
+        //ATT_TYPE_FORMAT_16UUID |            //otherwise, 128bit UUID
+        //ATT_VALUE_BOND_ENABLE |
+        //ATT_PERMISSION_ENC_READ |
+        //ATT_PERMISSION_ENC_WRITE |
+        //ATT_PERMISSION_AUTHE_READ |
+        //ATT_PERMISSION_AUTHE_WRITE |
+        //ATT_PERMISSION_AUTHO_READ |
+        //ATT_PERMISSION_AUTHO_WRITE |
+        0x00
+    ),
+    ble_svcs_trsps_handler,       //registered callback function
+};
+
+const ble_att_param_t att_custom_custdata01_client_charc_configuration = {
+    (void *)attr_uuid_type_client_charc_configuration,
+    (void *)0,
+    0,
+    (
+        //GATT_DECLARATIONS_PROPERTIES_BROADCAST |
+        GATT_DECLARATIONS_PROPERTIES_READ |
+        //GATT_DECLARATIONS_PROPERTIES_WRITE_WITHOUT_RESPONSE |
+        GATT_DECLARATIONS_PROPERTIES_WRITE |
+        //GATT_DECLARATIONS_PROPERTIES_NOTIFY |
+        //GATT_DECLARATIONS_PROPERTIES_INDICATE |
+        //GATT_DECLARATIONS_PROPERTIES_AUTHENTICATED_SIGNED_WRITES |
+        //GATT_DECLARATIONS_PROPERTIES_EXTENDED_PROPERTIES |
+        0x00
+    ),
+    (
+        ATT_TYPE_FORMAT_16UUID |            //otherwise, 128bit UUID
+        //ATT_VALUE_BOND_ENABLE |
+        //ATT_PERMISSION_ENC_READ |
+        //ATT_PERMISSION_ENC_WRITE |
+        //ATT_PERMISSION_AUTHE_READ |
+        //ATT_PERMISSION_AUTHE_WRITE |
+        //ATT_PERMISSION_AUTHO_READ |
+        //ATT_PERMISSION_AUTHO_WRITE |
+        0x00
+    ),
+    ble_svcs_trsps_handler,       //registered callback function
+};
+
+const ble_att_param_t att_custom_characteristic_custcmd01 = {
+    (void *)attr_uuid_type_characteristic,
+    (void *)attr_uuid_custom_charc_custcmd01,
+    sizeof(attr_uuid_custom_charc_custcmd01),
+    (
+        //GATT_DECLARATIONS_PROPERTIES_BROADCAST |
+        GATT_DECLARATIONS_PROPERTIES_READ |
+        //GATT_DECLARATIONS_PROPERTIES_WRITE_WITHOUT_RESPONSE |
+        //GATT_DECLARATIONS_PROPERTIES_WRITE |
+        //GATT_DECLARATIONS_PROPERTIES_NOTIFY |
+        //GATT_DECLARATIONS_PROPERTIES_INDICATE |
+        //GATT_DECLARATIONS_PROPERTIES_AUTHENTICATED_SIGNED_WRITES |
+        //GATT_DECLARATIONS_PROPERTIES_EXTENDED_PROPERTIES |
+        0x00
+    ),
+    (
+        ATT_TYPE_FORMAT_16UUID |            //otherwise, 128bit UUID
+        //ATT_VALUE_BOND_ENABLE |
+        //ATT_PERMISSION_ENC_READ |
+        //ATT_PERMISSION_ENC_WRITE |
+        //ATT_PERMISSION_AUTHE_READ |
+        //ATT_PERMISSION_AUTHE_WRITE |
+        //ATT_PERMISSION_AUTHO_READ |
+        //ATT_PERMISSION_AUTHO_WRITE |
+        0x00
+    ),
+    attr_null_access,                       //This function should be set to attr_null_access when att_len or p_uuid_value is a null value.
+};
+
+const ble_att_param_t att_custom_custcmd01 = {
+    (void *)attr_uuid_custom_charc_custcmd01,
+    (void *)0,
+    0,
+    (
+        //GATT_DECLARATIONS_PROPERTIES_BROADCAST |
+        //GATT_DECLARATIONS_PROPERTIES_READ |
+        GATT_DECLARATIONS_PROPERTIES_WRITE_WITHOUT_RESPONSE |
+        GATT_DECLARATIONS_PROPERTIES_WRITE |
+        //GATT_DECLARATIONS_PROPERTIES_NOTIFY |
+        //GATT_DECLARATIONS_PROPERTIES_INDICATE |
+        //GATT_DECLARATIONS_PROPERTIES_AUTHENTICATED_SIGNED_WRITES |
+        //GATT_DECLARATIONS_PROPERTIES_EXTENDED_PROPERTIES |
+        0x00
+    ),
+    (
+        //ATT_TYPE_FORMAT_16UUID |            //otherwise, 128bit UUID
+        //ATT_VALUE_BOND_ENABLE |
+        //ATT_PERMISSION_ENC_READ |
+        //ATT_PERMISSION_ENC_WRITE |
+        //ATT_PERMISSION_AUTHE_READ |
+        //ATT_PERMISSION_AUTHE_WRITE |
+        //ATT_PERMISSION_AUTHO_READ |
+        //ATT_PERMISSION_AUTHO_WRITE |
+        0x00
+    ),
+    ble_svcs_trsps_handler,       //registered callback function
+};
+
+/**************************************************************************
+ * Custom Service Handles Definition
+ **************************************************************************/
+typedef struct ble_svcs_custom_handles_s
+{
+    uint16_t hdl_custdata01;         /**< Handle of CUSTDATA01 (Report). */
+    uint16_t hdl_custdata01_cccd;    /**< Handle of CUSTDATA01 CCCD. */
+    uint16_t hdl_custcmd01;          /**< Handle of CUSTCMD01 (Command). */
+} ble_svcs_custom_handles_t;
+
+/** Custom Service Data Definition */
+typedef struct ble_svcs_custom_data_s
+{
+    uint16_t custdata01_cccd;    /**< CUSTDATA01 CCCD value */
+} ble_svcs_custom_data_t;
+
+/** Custom Service Info Structure */
+typedef struct ble_svcs_custom_info_s
+{
+    ble_svcs_custom_handles_t handles;    /**< Custom attribute handles */
+    ble_svcs_custom_data_t    data;       /**< Custom attribute data */
+} ble_svcs_custom_info_t;
+
 
 /**************************************************************************
  * BLE Service << TRSPS >> Local Variable
@@ -348,6 +580,12 @@ ble_svcs_evt_trsps_handler_t      trsps_callback[MAX_NUM_CONN_TRSPS];
 
 // TRSPS registered total count
 uint8_t                           trsps_count = 0;
+
+// Custom Service information
+ble_svcs_custom_info_t            *custom_info[MAX_NUM_CONN_TRSPS];
+
+// Custom Service callback
+ble_svcs_evt_trsps_handler_t      custom_callback[MAX_NUM_CONN_TRSPS];
 
 
 /**************************************************************************
@@ -425,6 +663,90 @@ ble_err_t ble_svcs_trsps_handles_get(uint8_t host_id,  ble_gatt_role_t role, ble
     } while (0);
 
     return status;
+}
+
+
+/* Initialize Custom Service */
+void ble_svcs_custom_init(uint8_t host_id, ble_svcs_evt_trsps_handler_t callback)
+{
+    uint8_t config_index;
+    ble_gatt_handle_table_param_t ble_gatt_handle_table_param;
+    
+    if (ble_svcs_common_info_index_query(host_id, BLE_GATT_ROLE_SERVER, MAX_NUM_CONN_TRSPS, trsps_basic_info, &config_index) != BLE_ERR_OK)
+    {
+        return;
+    }
+    
+    // Initialize custom_info for this connection
+    if (custom_info[config_index] == NULL)
+    {
+        custom_info[config_index] = (ble_svcs_custom_info_t *)pvPortMalloc(sizeof(ble_svcs_custom_info_t));
+        if (custom_info[config_index] != NULL)
+        {
+            memset(custom_info[config_index], 0, sizeof(ble_svcs_custom_info_t));
+            
+            // Get Custom service handles from profile database
+            ble_gatt_handle_table_param.host_id = host_id;
+            ble_gatt_handle_table_param.gatt_role = BLE_GATT_ROLE_SERVER;
+            ble_gatt_handle_table_param.p_element = (ble_att_param_t *)&att_custom_primary_service;
+            ble_gatt_handle_table_param.p_handle_num_addr = (void *)&custom_info[config_index]->handles;
+            
+            ble_svcs_handles_mapping_get(&ble_gatt_handle_table_param);
+        }
+    }
+    
+    // Register Custom service callback function
+    custom_callback[config_index] = callback;
+}
+
+
+/* Send Custom Data - Notification or Indication */
+ble_err_t ble_svcs_custom_server_send(uint8_t host_id, uint16_t cccd_type, uint16_t handle_num, const uint8_t *p_data, uint16_t length)
+{
+    ble_gatt_data_param_t ble_gatt_data_param;
+    
+    ble_gatt_data_param.host_id = host_id;
+    ble_gatt_data_param.handle_num = handle_num;
+    ble_gatt_data_param.length = length;
+    ble_gatt_data_param.p_data = (uint8_t *)p_data;
+    
+    if (cccd_type == BLEGATT_CCCD_NOTIFICATION)
+    {
+        return ble_svcs_data_send(TYPE_BLE_GATT_NOTIFICATION, &ble_gatt_data_param);
+    }
+    else if (cccd_type == BLEGATT_CCCD_INDICATION)
+    {
+        return ble_svcs_data_send(TYPE_BLE_GATT_INDICATION, &ble_gatt_data_param);
+    }
+    
+    return BLE_ERR_INVALID_PARAMETER;
+}
+
+
+/* Get Custom Service Information */
+ble_err_t ble_svcs_custom_info_get(uint8_t host_id, uint16_t *p_cccd, uint16_t *p_handle)
+{
+    uint8_t config_index;
+    
+    if (p_cccd == NULL || p_handle == NULL)
+    {
+        return BLE_ERR_INVALID_PARAMETER;
+    }
+    
+    if (ble_svcs_common_info_index_query(host_id, BLE_GATT_ROLE_SERVER, MAX_NUM_CONN_TRSPS, trsps_basic_info, &config_index) != BLE_ERR_OK)
+    {
+        return BLE_ERR_INVALID_PARAMETER;
+    }
+    
+    if (custom_info[config_index] == NULL)
+    {
+        return BLE_ERR_INVALID_PARAMETER;
+    }
+    
+    *p_cccd = custom_info[config_index]->data.custdata01_cccd;
+    *p_handle = custom_info[config_index]->handles.hdl_custdata01;
+    
+    return BLE_ERR_OK;
 }
 
 
@@ -612,6 +934,29 @@ static void handle_trsps_server(uint8_t index, ble_evt_att_param_t *p_param)
             p_param->event = BLESERVICE_TRSPS_UDATRW01_READ_EVENT;
             trsps_evt_post(p_param, &trsps_callback[index]);
         }
+        // Custom Service - CUSTDATA01 Read
+        else if (custom_info[index] != NULL && p_param->handle_num == custom_info[index]->handles.hdl_custdata01)
+        {
+            p_param->event = BLESERVICE_CUSTOM_CUSTDATA01_READ_EVENT;  // 0x0f
+            if (custom_callback[index])
+            {
+                custom_callback[index](p_param);
+            }
+        }
+        // Custom Service - CUSTDATA01 CCCD Read
+        else if (custom_info[index] != NULL && p_param->handle_num == custom_info[index]->handles.hdl_custdata01_cccd)
+        {
+            ble_svcs_auto_handle_cccd_read_req(p_param, custom_info[index]->data.custdata01_cccd);
+        }
+        // Custom Service - CUSTDATA01 Indication Confirmation
+        else if (custom_info[index] != NULL && p_param->handle_num == custom_info[index]->handles.hdl_custdata01)
+        {
+            p_param->event = BLESERVICE_CUSTOM_CUSTDATA01_READ_EVENT;  // 0x0f (reuse for confirmation)
+            if (custom_callback[index])
+            {
+                custom_callback[index](p_param);
+            }
+        }
         break;
     case OPCODE_ATT_WRITE_REQUEST:
         if (p_param->handle_num == trsps_info[index]->server_info.handles.hdl_udatni01_cccd)
@@ -625,6 +970,20 @@ static void handle_trsps_server(uint8_t index, ble_evt_att_param_t *p_param)
             p_param->event = BLESERVICE_TRSPS_UDATRW01_WRITE_EVENT;
             trsps_evt_post(p_param, &trsps_callback[index]);
         }
+        // Custom Service - CUSTDATA01 CCCD Write
+        else if (custom_info[index] != NULL && p_param->handle_num == custom_info[index]->handles.hdl_custdata01_cccd)
+        {
+            ble_svcs_handle_cccd_write_req(p_param->data, p_param->length, &custom_info[index]->data.custdata01_cccd);
+        }
+        // Custom Service - CUSTCMD01 Write
+        else if (custom_info[index] != NULL && p_param->handle_num == custom_info[index]->handles.hdl_custcmd01)
+        {
+            p_param->event = BLESERVICE_CUSTOM_CUSTCMD01_WRITE_EVENT;  // 0x10
+            if (custom_callback[index])
+            {
+                custom_callback[index](p_param);
+            }
+        }
         break;
     case OPCODE_ATT_WRITE_COMMAND:
         if (p_param->handle_num == trsps_info[index]->server_info.handles.hdl_udatrw01)
@@ -632,6 +991,15 @@ static void handle_trsps_server(uint8_t index, ble_evt_att_param_t *p_param)
             // received write without response from client
             p_param->event = BLESERVICE_TRSPS_UDATRW01_WRITE_WITHOUT_RSP_EVENT;
             trsps_evt_post(p_param, &trsps_callback[index]);
+        }
+        // Custom Service - CUSTCMD01 Write Command (no response)
+        else if (custom_info[index] != NULL && p_param->handle_num == custom_info[index]->handles.hdl_custcmd01)
+        {
+            p_param->event = BLESERVICE_CUSTOM_CUSTCMD01_WRITE_WITHOUT_RSP_EVENT;  // 0x11
+            if (custom_callback[index])
+            {
+                custom_callback[index](p_param);
+            }
         }
         break;
     case OPCODE_ATT_HANDLE_VALUE_CONFIRMATION:
